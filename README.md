@@ -507,9 +507,9 @@ gmya.net 免费档对连续请求有频率限制。解决方法：
 ## 📜 同步与致谢
 ## 鸣谢
 
-- [[https://github.com/Coaixy/weiban-tool](https://github.com/hangone/WeBan](https://github.com/hangone/WeBan)](https://github.com/chiihero/Microsoft-Rewards-Script)) 提供开源源码
+- [chiihero/Microsoft-Rewards-Script: 微软奖励脚本，基于他人脚本实现中文环境的本地化](https://github.com/chiihero/Microsoft-Rewards-Script)  提供开源源码
 
-## 其他
+## 其他 
 
 本项目仅供学习交流使用，请勿用于商业用途。
 
