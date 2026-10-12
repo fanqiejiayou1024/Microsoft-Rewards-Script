@@ -14,15 +14,9 @@
 
 </div>
 
-> ℹ️ **分支选择建议**
->
-> - **`main` 分支（v3，稳定版）**：已兼容微软新版 UI，实测未发现明显异常，可放心日常使用。
-> - **`V4-china` 分支（v4 新架构，基本可用，本分支）**：搜索、活动、签到、Read-to-Earn、微信推送（PushPlus / ClawBot）等核心功能已实测通过（2026-08），**可以切换日常使用**；新架构仍在迭代，偶发小问题属正常，追求稳定可继续留在 `main` 分支。
->
-> 两分支配置文件结构不同，**互不兼容**；本分支账号改用 `.env` 环境变量配置（不再使用 `accounts.json`），从 v3 迁移请按本文档重新配置 `.env` / `config.json`。
 
-> [!TIP]
-> 本分支仅支持**新版（modern）Bing Rewards 面板**，不支持旧版面板。账户还在旧版面板的请使用本仓库 [`main` 分支](https://github.com/chiihero/Microsoft-Rewards-Script/tree/main)（v3）。
+> - **`V4-china` 分支（v4 新架构，基本可用，本分支）**：搜索、活动、签到、Read-to-Earn、微信推送（PushPlus / ClawBot）等核心功能已实测通过（2026-08），**可以切换日常使用**；新架构仍在迭代，偶发小问题属正常，追求稳定可继续留在 `main` 分支。
+
 
 ---
 
@@ -90,24 +84,8 @@
 
 ## 🚀 快速开始
 
-本脚本支持两种部署方式，**按你的场景二选一即可**：
-
-| 维度           | 📦 Windows 直跑                       | 🐳 Docker                                            |
-| -------------- | ------------------------------------- | ---------------------------------------------------- |
-| **配置方式**   | `.env`（账号）+ `config.json`（行为） | `.env`（账号）+ `compose.yaml` 的 `CONFIG_*`（行为） |
-| **调度**       | 手动 / 计划任务                       | 内置 cron + API 改调度                               |
-| **headless**   | 可选（可见窗口）                      | 强制 `true`（无显示器）                              |
-| **数据持久化** | `sessions/` 目录                      | `./config/` + `./sessions/` 挂载                     |
-| **升级方式**   | `git pull` + `npm run build`          | `docker compose up -d --build`                       |
-| **前置要求**   | Node.js 24+                           | Docker + Docker Compose                              |
-
-> ⚠️ 与 v3（`main` 分支）不同：**账号统一在 `.env` 中配置**（`ACCOUNT_1_EMAIL` 等），不再使用 `accounts.json`；行为配置仍在 `config.json`（Docker 下用 `CONFIG_*` 环境变量）。
-
----
-
 ## 📦 Windows 部署
 
-> ⚠️ 本项目所有改动基于 Win11 系统测试，其他系统请参考[原项目](https://github.com/TheNetsky/Microsoft-Rewards-Script)相关配置。
 
 <details>
 <summary><b>🔧 自动设置（推荐，一键部署）</b></summary>
@@ -165,83 +143,6 @@
     ```
 
 > 💡 调试时可直接源码运行：`npm run dev`（带 `-dev` 参数输出 DEBUG 日志）。
-
-</details>
-
----
-
-## 🐳 Docker 部署
-
-<details open>
-<summary><b>部署步骤</b></summary>
-
-> [!IMPORTANT]
-> 本仓库 `compose.yaml` 默认 `build: .` 本地构建（运行本分支代码）。**不要**改回 `ghcr.io/thenetsky/...` 官方镜像——那是原作者的原版代码，不含中国热搜 / PushPlus 等国内适配。
-
-### 1. 准备账号文件（.env）
-
-```bash
-cp env.example .env
-```
-
-编辑 `.env`，至少填一个账号：
-
-```dotenv
-ACCOUNT_1_EMAIL=you@example.com
-ACCOUNT_1_PASSWORD=your_password
-```
-
-> 多账号按 `ACCOUNT_2_*`、`ACCOUNT_3_*` 递增（编号无需连续，按编号升序运行）。完整字段见 `env.example`。
-
-> ⚠️ **Docker 用户注意：`.env` 不会自动传入容器**。Compose 只把同目录 `.env` 用于变量替换；若你自行编写/裁剪了 `compose.yaml`，必须保留 `env_file` 段（本仓库模板已内置），否则容器里一个账号都读不到：
->
-> ```yaml
-> services:
->   microsoft-rewards-script:
->     env_file:
->       - path: .env
-> ```
->
-> 另外用**列表式** `environment:`（`- KEY=value`）时值**不要加引号**——引号会成为值的一部分（如 `- CRON_SCHEDULE="0 9 * * *"` 会让 cron 表达式带引号而失效）；映射式（`KEY: value`）则按 YAML 规则正常加引号。
-
-### 2. 编辑 compose.yaml（可选）
-
-默认配置开箱即用，如需调整取消对应行注释即可：
-
-- `TZ`：时区（默认 `Asia/Shanghai`）
-- `CRON_SCHEDULE`：调度（默认 `0 7 * * *`，每天 7 点）
-- `RUN_ON_START`：容器启动时是否立即跑一次（默认 `true`）
-- `CONFIG_SEARCH_QUERY_ENGINES`：查询源，国内推荐 `china,local`
-- `CONFIG_CHINA_API_APPKEY`：gmya.net appkey，解除免费档限流（留空走免费档）
-- `CONFIG_PUSHPLUS_*` / `CONFIG_SERVERCHAN_*` / `CONFIG_CLAWBOT_*`：微信推送
-
-> 完整的 `CONFIG_*` 环境变量列表见[配置参考](#️-配置参考)各表格。`CONFIG_*` 每次启动都会覆盖 `./config/config.json`。
-
-### 3. 构建并启动
-
-```bash
-docker compose up -d --build
-```
-
-> **重要**：改了代码或 Dockerfile 后必须加 `--build` 重建镜像，否则跑的还是旧镜像。
-
-### 4. 数据持久化
-
-容器挂载了两个目录，重建容器不丢数据：
-
-- `./config/`：配置文件（首次运行自动生成 `config.json`）
-- `./sessions/`：登录会话（首次登录后 cookie 存这里，后续自动复用）
-
-> 💡 使用微信 ClawBot 推送时，建议先在本地跑一次完成扫码，再把生成的 `clawbot-auth.json` 挂载进容器（或配合 `API_MODE` 在容器内完成扫码）。
-
-### 常用命令
-
-```bash
-docker compose up -d --build   # 构建+启动
-docker compose logs -f          # 查看日志
-docker compose down             # 停止并删除容器
-docker compose restart          # 重启（不重建）
-```
 
 </details>
 
@@ -604,30 +505,15 @@ gmya.net 免费档对连续请求有频率限制。解决方法：
 ---
 
 ## 📜 同步与致谢
+## 鸣谢
 
-本项目 fork 自 [TheNetsky/Microsoft-Rewards-Script](https://github.com/TheNetsky/Microsoft-Rewards-Script)，`V4-china` 分支基于上游 **v4 分支**（新版 dashboard 架构）做国内本地化：
+- [[https://github.com/Coaixy/weiban-tool](https://github.com/hangone/WeBan](https://github.com/hangone/WeBan)](https://github.com/chiihero/Microsoft-Rewards-Script)) 提供开源源码
 
-- 中国热搜查询源（gmya.net 聚合百度/头条/抖音/微博/知乎，多源随机 + 限流退避 + appkey 解限流）
-- PushPlus / 微信 ClawBot 微信推送渠道
-- 国内默认值调优（china+local 引擎、搜索间隔 6-12min、防风控默认项）
-- 中文词库（`search-queries.json`）与全量日志中文化
-- Docker 基础镜像走 m.daocloud.io 加速；浏览器版本接口不可达时自动回退内置版本
+## 其他
 
-若有侵权请联系删除。
+本项目仅供学习交流使用，请勿用于商业用途。
 
-**本项目所有改动基于 Win11 系统测试。其他系统未测试，请根据原项目相关配置设置。**
-
-| 项目         | 信息                                                                                                      |
-| ------------ | --------------------------------------------------------------------------------------------------------- |
-| 上游仓库     | [TheNetsky/Microsoft-Rewards-Script](https://github.com/TheNetsky/Microsoft-Rewards-Script)（v4 分支）    |
-| 本仓库       | [chiihero/Microsoft-Rewards-Script](https://github.com/chiihero/Microsoft-Rewards-Script) `V4-china` 分支 |
-| 当前版本     | 4.3.0                                                                                                     |
-| 最后同步上游 | 2026-08-16                                                                                                |
-
----
 
 ## ⚠️ 免责声明
 
 **风险自负！** 使用自动化脚本时，您的 Microsoft Rewards 账户可能会被暂停或禁止。
-
-此脚本仅供教育目的。作者对 Microsoft 采取的任何账户操作不承担责任。
